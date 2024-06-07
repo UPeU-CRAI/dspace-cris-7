@@ -14,23 +14,18 @@ import {
   tap,
 } from 'rxjs/operators';
 
-import {
-  AuthActionTypes,
-  RetrieveAuthenticatedEpersonSuccessAction,
-} from '../../core/auth/auth.actions';
 import { PaginatedList } from '../../core/data/paginated-list.model';
-import { EPerson } from '../../core/eperson/models/eperson.model';
+import { SuggestionTarget } from '../../core/notifications/suggestions/models/suggestion-target.model';
 import { NotificationsService } from '../../shared/notifications/notifications.service';
 import { SuggestionsService } from '../suggestions.service';
 import {
   AddTargetAction,
   AddUserSuggestionsAction,
   RefreshUserSuggestionsErrorAction,
+  RetrieveAllTargetsErrorAction,
   RetrieveTargetsBySourceAction,
-  RetrieveTargetsBySourceErrorAction,
   SuggestionTargetActionTypes,
 } from './suggestion-targets.actions';
-import { SuggestionTarget } from "../../core/notifications/models/suggestion-target.model";
 
 /**
  * Provides effect methods for the Suggestion Targets actions.
@@ -50,13 +45,13 @@ export class SuggestionTargetsEffects {
         action.payload.currentPage,
       ).pipe(
         map((targets: PaginatedList<SuggestionTarget>) =>
-          new AddTargetAction(action.payload.source, targets.page, targets.totalPages, targets.currentPage, targets.totalElements),
+          new AddTargetAction(targets.page, targets.totalPages, targets.currentPage, targets.totalElements),
         ),
         catchError((error: unknown) => {
           if (error instanceof Error) {
             console.error(error.message);
           }
-          return of(new RetrieveTargetsBySourceErrorAction(action.payload.source));
+          return of(new RetrieveAllTargetsErrorAction());
         }),
       );
     }),
@@ -73,26 +68,15 @@ export class SuggestionTargetsEffects {
   ), { dispatch: false });
 
   /**
-   * Show a notification on error.
-   */
-  retrieveUserTargets$ = createEffect(() => this.actions$.pipe(
-    ofType(AuthActionTypes.RETRIEVE_AUTHENTICATED_EPERSON_SUCCESS),
-    switchMap((action: RetrieveAuthenticatedEpersonSuccessAction) => {
-      return this.suggestionsService.retrieveCurrentUserSuggestions(action.payload).pipe(
-        map((suggestionTargets: SuggestionTarget[]) => new AddUserSuggestionsAction(suggestionTargets)),
-      );
-    })));
-
-  /**
    * Fetch the current user suggestion
    */
   refreshUserSuggestionsAction$ = createEffect(() => this.actions$.pipe(
     ofType(SuggestionTargetActionTypes.REFRESH_USER_SUGGESTIONS),
     switchMap(() => {
-      return this.store$.select((state: any) => state.core.auth.user)
+      return this.store$.select((state: any) => state.core.auth.userId)
         .pipe(
-          switchMap((user: EPerson) => {
-            return this.suggestionsService.retrieveCurrentUserSuggestions(user.uuid)
+          switchMap((userId: string) => {
+            return this.suggestionsService.retrieveCurrentUserSuggestions(userId)
               .pipe(
                 map((suggestionTargets: SuggestionTarget[]) => new AddUserSuggestionsAction(suggestionTargets)),
                 catchError((error: unknown) => {

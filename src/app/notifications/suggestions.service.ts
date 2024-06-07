@@ -21,11 +21,15 @@ import {
 import { FindListOptions } from '../core/data/find-list-options.model';
 import { PaginatedList } from '../core/data/paginated-list.model';
 import { RemoteData } from '../core/data/remote-data';
-
+import { Suggestion } from '../core/notifications/suggestions/models/suggestion.model';
+import { SuggestionTarget } from '../core/notifications/suggestions/models/suggestion-target.model';
+import { SuggestionDataService } from '../core/notifications/suggestions/suggestion-data.service';
+import { SuggestionTargetDataService } from '../core/notifications/suggestions/target/suggestion-target-data.service';
 import { ResearcherProfile } from '../core/profile/model/researcher-profile.model';
 import { ResearcherProfileDataService } from '../core/profile/researcher-profile-data.service';
 import { NoContent } from '../core/shared/NoContent.model';
 import {
+  getAllSucceededRemoteDataPayload,
   getFinishedRemoteData,
   getFirstCompletedRemoteData,
   getFirstSucceededRemoteDataPayload,
@@ -38,11 +42,7 @@ import {
   hasValue,
   isNotEmpty,
 } from '../shared/empty.util';
-import { followLink } from '../shared/utils/follow-link-config.model';
 import { getSuggestionPageRoute } from '../suggestions-page/suggestions-page-routing-paths';
-import { SuggestionTargetDataService } from "../core/notifications/target/suggestion-target-data.service";
-import { SuggestionTarget } from "../core/notifications/models/suggestion-target.model";
-import { Suggestion } from "../core/notifications/models/suggestion.model";
 
 /**
  * useful for multiple approvals and ignores operation
@@ -121,7 +121,7 @@ export class SuggestionsService {
    * @return Observable<RemoteData<PaginatedList<Suggestion>>>
    *    The list of Suggestion.
    */
-  public getSuggestions(targetId: string, elementsPerPage, currentPage, sortOptions: SortOptions): Observable<RemoteData<PaginatedList<Suggestion>>> {
+  public getSuggestions(targetId: string, elementsPerPage, currentPage, sortOptions: SortOptions): Observable<PaginatedList<Suggestion>> {
     const [source, target] = targetId.split(':');
 
     const findListOptions: FindListOptions = {
@@ -130,7 +130,9 @@ export class SuggestionsService {
       sort: sortOptions,
     };
 
-    return this.suggestionsDataService.getSuggestionsByTargetAndSource(target, source, findListOptions);
+    return this.suggestionsDataService.getSuggestionsByTargetAndSource(target, source, findListOptions).pipe(
+      getAllSucceededRemoteDataPayload(),
+    );
   }
 
   /**
@@ -167,7 +169,7 @@ export class SuggestionsService {
     if (hasNoValue(userUuid)) {
       return of([]);
     }
-    return this.researcherProfileService.findById(userUuid, true, true,  followLink('item')).pipe(
+    return this.researcherProfileService.findById(userUuid, true).pipe(
       getFirstCompletedRemoteData(),
       mergeMap((profile: RemoteData<ResearcherProfile> ) => {
         if (isNotEmpty(profile) && profile.hasSucceeded && isNotEmpty(profile.payload)) {
@@ -194,8 +196,8 @@ export class SuggestionsService {
    * @private
    */
   public approveAndImport(workspaceitemService: WorkspaceitemDataService,
-                          suggestion: Suggestion,
-                          collectionId: string): Observable<WorkspaceItem> {
+    suggestion: Suggestion,
+    collectionId: string): Observable<WorkspaceItem> {
 
     const resolvedCollectionId = this.resolveCollectionId(suggestion, collectionId);
     return workspaceitemService.importExternalSourceEntry(suggestion.externalSourceUri, resolvedCollectionId)
@@ -222,8 +224,8 @@ export class SuggestionsService {
    * @param collectionId the collectionId
    */
   public approveAndImportMultiple(workspaceitemService: WorkspaceitemDataService,
-                                  suggestions: Suggestion[],
-                                  collectionId: string): Observable<SuggestionBulkResult> {
+    suggestions: Suggestion[],
+    collectionId: string): Observable<SuggestionBulkResult> {
 
     return forkJoin(suggestions.map((suggestion: Suggestion) =>
       this.approveAndImport(workspaceitemService, suggestion, collectionId)))

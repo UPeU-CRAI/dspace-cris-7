@@ -8,6 +8,7 @@ import { RemoteData } from '../core/data/remote-data';
 import { hasValue } from '../shared/empty.util';
 import { SuggestionTarget } from '../core/notifications/models/suggestion-target.model';
 import { SuggestionTargetDataService } from '../core/notifications/target/suggestion-target-data.service';
+import { getFirstCompletedRemoteData } from "../core/shared/operators";
 
 
 /**
@@ -27,7 +28,7 @@ export class SuggestionsPageResolver implements Resolve<RemoteData<SuggestionTar
    */
   resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<RemoteData<SuggestionTarget>> {
     return this.suggestionsDataService.getTargetById(route.params.targetId).pipe(
-      find((RD) => hasValue(RD.hasFailed) || RD.hasSucceeded),
+      getFirstCompletedRemoteData(),
     );
   }
 }

@@ -1,33 +1,48 @@
 import { Injectable } from '@angular/core';
-
-import { of, forkJoin, Observable } from 'rxjs';
-import { catchError, map, mergeMap, take } from 'rxjs/operators';
-
-import { SortDirection, SortOptions } from '../core/cache/models/sort-options.model';
-import { RemoteData } from '../core/data/remote-data';
-import { PaginatedList } from '../core/data/paginated-list.model';
-import { hasValue, isNotEmpty } from '../shared/empty.util';
-import { ResearcherProfile } from '../core/profile/model/researcher-profile.model';
+import { TranslateService } from '@ngx-translate/core';
 import {
-  getAllSucceededRemoteDataPayload,
+  forkJoin,
+  Observable,
+  of,
+} from 'rxjs';
+import {
+  catchError,
+  map,
+  mergeMap,
+  take,
+} from 'rxjs/operators';
+
+import { SuggestionConfig } from '../../config/suggestion-config.interfaces';
+import { environment } from '../../environments/environment';
+import {
+  SortDirection,
+  SortOptions,
+} from '../core/cache/models/sort-options.model';
+import { FindListOptions } from '../core/data/find-list-options.model';
+import { PaginatedList } from '../core/data/paginated-list.model';
+import { RemoteData } from '../core/data/remote-data';
+
+import { ResearcherProfile } from '../core/profile/model/researcher-profile.model';
+import { ResearcherProfileDataService } from '../core/profile/researcher-profile-data.service';
+import { NoContent } from '../core/shared/NoContent.model';
+import {
   getFinishedRemoteData,
   getFirstCompletedRemoteData,
   getFirstSucceededRemoteDataPayload,
   getFirstSucceededRemoteListPayload,
 } from '../core/shared/operators';
-import { WorkspaceitemDataService } from '../core/submission/workspaceitem-data.service';
-import { TranslateService } from '@ngx-translate/core';
-import { NoContent } from '../core/shared/NoContent.model';
-import { environment } from '../../environments/environment';
 import { WorkspaceItem } from '../core/submission/models/workspaceitem.model';
-import {FindListOptions} from '../core/data/find-list-options.model';
-import {SuggestionConfig} from '../../config/suggestion-config.interfaces';
-import { ResearcherProfileDataService } from '../core/profile/researcher-profile-data.service';
+import { WorkspaceitemDataService } from '../core/submission/workspaceitem-data.service';
+import {
+  hasNoValue,
+  hasValue,
+  isNotEmpty,
+} from '../shared/empty.util';
+import { followLink } from '../shared/utils/follow-link-config.model';
 import { getSuggestionPageRoute } from '../suggestions-page/suggestions-page-routing-paths';
-import { SuggestionsDataService } from '../core/notifications/suggestions-data.service';
-import { SuggestionTargetDataService } from '../core/notifications/target/suggestion-target-data.service';
-import { SuggestionTarget } from '../core/notifications/models/suggestion-target.model';
-import { Suggestion } from '../core/notifications/models/suggestion.model';
+import { SuggestionTargetDataService } from "../core/notifications/target/suggestion-target-data.service";
+import { SuggestionTarget } from "../core/notifications/models/suggestion-target.model";
+import { Suggestion } from "../core/notifications/models/suggestion.model";
 
 /**
  * useful for multiple approvals and ignores operation
@@ -40,21 +55,21 @@ export interface SuggestionBulkResult {
 /**
  * The service handling all Suggestion Target  requests to the REST service.
  */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class SuggestionsService {
 
   /**
    * Initialize the service variables.
    * @param {ResearcherProfileDataService} researcherProfileService
    * @param {SuggestionTargetDataService} suggestionTargetDataService
-   * @param {SuggestionsDataService} suggestionsDataService
+   * @param {SuggestionDataService} suggestionsDataService
    * @param translateService
    */
   constructor(
     private researcherProfileService: ResearcherProfileDataService,
-    private suggestionsDataService: SuggestionsDataService,
+    private suggestionsDataService: SuggestionDataService,
     private suggestionTargetDataService: SuggestionTargetDataService,
-    private translateService: TranslateService
+    private translateService: TranslateService,
   ) {
   }
 
@@ -76,10 +91,10 @@ export class SuggestionsService {
     const findListOptions: FindListOptions = {
       elementsPerPage: elementsPerPage,
       currentPage: currentPage,
-      sort: sortOptions
+      sort: sortOptions,
     };
 
-    return this.suggestionTargetDataService.getTargets(source, findListOptions).pipe(
+    return this.suggestionTargetDataService.getTargetsBySource(source, findListOptions).pipe(
       getFinishedRemoteData(),
       take(1),
       map((rd: RemoteData<PaginatedList<SuggestionTarget>>) => {
@@ -88,7 +103,7 @@ export class SuggestionsService {
         } else {
           throw new Error('Can\'t retrieve Suggestion Target from the Search Target REST service');
         }
-      })
+      }),
     );
   }
 
@@ -106,18 +121,16 @@ export class SuggestionsService {
    * @return Observable<RemoteData<PaginatedList<Suggestion>>>
    *    The list of Suggestion.
    */
-  public getSuggestions(targetId: string, elementsPerPage, currentPage, sortOptions: SortOptions): Observable<PaginatedList<Suggestion>> {
+  public getSuggestions(targetId: string, elementsPerPage, currentPage, sortOptions: SortOptions): Observable<RemoteData<PaginatedList<Suggestion>>> {
     const [source, target] = targetId.split(':');
 
     const findListOptions: FindListOptions = {
       elementsPerPage: elementsPerPage,
       currentPage: currentPage,
-      sort: sortOptions
+      sort: sortOptions,
     };
 
-    return this.suggestionsDataService.getSuggestionsByTargetAndSource(target, source, findListOptions).pipe(
-      getAllSucceededRemoteDataPayload()
-    );
+    return this.suggestionsDataService.getSuggestionsByTargetAndSource(target, source, findListOptions);
   }
 
   /**
@@ -140,7 +153,7 @@ export class SuggestionsService {
           throw new Error('Can\'t delete Suggestion from the Search Target REST service');
         }
       }),
-      take(1)
+      take(1),
     );
   }
 
@@ -151,22 +164,25 @@ export class SuggestionsService {
    *   The EPerson id for which to retrieve suggestion targets
    */
   public retrieveCurrentUserSuggestions(userUuid: string): Observable<SuggestionTarget[]> {
-    return this.researcherProfileService.findById(userUuid, true).pipe(
+    if (hasNoValue(userUuid)) {
+      return of([]);
+    }
+    return this.researcherProfileService.findById(userUuid, true, true,  followLink('item')).pipe(
       getFirstCompletedRemoteData(),
       mergeMap((profile: RemoteData<ResearcherProfile> ) => {
         if (isNotEmpty(profile) && profile.hasSucceeded && isNotEmpty(profile.payload)) {
           return this.researcherProfileService.findRelatedItemId(profile.payload).pipe(
             mergeMap((itemId: string) => {
-              return this.suggestionsDataService.getTargetsByUser(itemId).pipe(
-                getFirstSucceededRemoteListPayload()
+              return this.suggestionTargetDataService.getTargetsByUser(itemId).pipe(
+                getFirstSucceededRemoteListPayload(),
               );
-            })
+            }),
           );
         } else {
           return of([]);
         }
       }),
-      catchError(() => of([]))
+      catchError(() => of([])),
     );
   }
 
@@ -185,7 +201,7 @@ export class SuggestionsService {
     return workspaceitemService.importExternalSourceEntry(suggestion.externalSourceUri, resolvedCollectionId)
       .pipe(
         getFirstSucceededRemoteDataPayload(),
-        catchError(() => of(null))
+        catchError(() => of(null)),
       );
   }
 
@@ -195,7 +211,7 @@ export class SuggestionsService {
    */
   public ignoreSuggestion(suggestionId): Observable<RemoteData<NoContent>> {
     return this.deleteReviewedSuggestion(suggestionId).pipe(
-      catchError(() => of(null))
+      catchError(() => of(null)),
     );
   }
 
@@ -214,7 +230,7 @@ export class SuggestionsService {
       .pipe(map((results: WorkspaceItem[]) => {
         return {
           success: results.filter((result) => result != null).length,
-          fails: results.filter((result) => result == null).length
+          fails: results.filter((result) => result == null).length,
         };
       }), take(1));
   }
@@ -228,7 +244,7 @@ export class SuggestionsService {
       .pipe(map((results: RemoteData<NoContent>[]) => {
         return {
           success: results.filter((result) => result != null).length,
-          fails: results.filter((result) => result == null).length
+          fails: results.filter((result) => result == null).length,
         };
       }), take(1));
   }
@@ -255,7 +271,7 @@ export class SuggestionsService {
       type:  this.translateService.instant(this.translateSuggestionType(suggestionTarget.source)),
       suggestionId: suggestionTarget.id,
       displayName: suggestionTarget.display,
-      url: getSuggestionPageRoute(suggestionTarget.id)
+      url: getSuggestionPageRoute(suggestionTarget.id),
     };
   }
 

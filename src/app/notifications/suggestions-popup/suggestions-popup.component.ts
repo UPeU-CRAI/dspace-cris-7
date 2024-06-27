@@ -3,7 +3,7 @@ import { SuggestionTargetsStateService } from '../suggestion-targets/suggestion-
 import { SuggestionsService } from '../suggestions.service';
 import { take, takeUntil } from 'rxjs/operators';
 import { isNotEmpty } from '../../shared/empty.util';
-import { combineLatest, Observable, of, Subject } from 'rxjs';
+import { combineLatest, Observable, of, Subject, Subscription } from 'rxjs';
 import { trigger } from '@angular/animations';
 
 
@@ -27,7 +27,7 @@ export class SuggestionsPopupComponent implements OnInit, OnDestroy {
 
   labelPrefix = 'notification.';
 
-  subscription;
+  subscription: Subscription;
 
   suggestionsRD$: Observable<SuggestionTarget[]>;
 

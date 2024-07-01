@@ -8,8 +8,8 @@ import { createSuccessfulRemoteDataObject$ } from '../../shared/remote-data.util
 import { buildPaginatedList } from '../../core/data/paginated-list.model';
 import { AdminNotifySearchResult } from './models/admin-notify-message-search-result.model';
 import { AdminNotifyMessage } from './models/admin-notify-message.model';
-import { environment } from "../../../environments/environment";
-import { APP_CONFIG } from "../../../config/app-config.interface";
+import { environment } from '../../../environments/environment';
+import { APP_CONFIG } from '../../../config/app-config.interface';
 
 describe('AdminNotifyDashboardComponent', () => {
   let component: AdminNotifyDashboardComponent;

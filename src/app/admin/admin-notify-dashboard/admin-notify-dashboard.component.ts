@@ -1,9 +1,8 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { SearchService } from '../../core/shared/search/search.service';
-import { environment } from '../../../environments/environment';
 import { PaginatedSearchOptions } from '../../shared/search/models/paginated-search-options.model';
 import { PaginationComponentOptions } from '../../shared/pagination/pagination-component-options.model';
-import { BehaviorSubject, forkJoin, Observable } from 'rxjs';
+import { BehaviorSubject, forkJoin } from 'rxjs';
 import { getFirstCompletedRemoteData } from '../../core/shared/operators';
 import { map } from 'rxjs/operators';
 import { SearchObjects } from '../../shared/search/models/search-objects.model';
@@ -11,7 +10,7 @@ import { AdminNotifyMetricsBox, AdminNotifyMetricsRow } from './admin-notify-met
 import { DSpaceObject } from '../../core/shared/dspace-object.model';
 import { SEARCH_CONFIG_SERVICE } from '../../my-dspace-page/my-dspace-page.component';
 import { SearchConfigurationService } from '../../core/shared/search/search-configuration.service';
-import { APP_CONFIG, AppConfig } from "../../../config/app-config.interface";
+import { APP_CONFIG, AppConfig } from '../../../config/app-config.interface';
 
 
 @Component({

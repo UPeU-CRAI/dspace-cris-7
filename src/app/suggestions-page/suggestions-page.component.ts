@@ -8,7 +8,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { SortDirection, SortOptions, } from '../core/cache/models/sort-options.model';
 import { PaginatedList } from '../core/data/paginated-list.model';
 import { RemoteData } from '../core/data/remote-data';
-import { getFirstCompletedRemoteData, getFirstSucceededRemoteDataPayload } from '../core/shared/operators';
+import { getFirstSucceededRemoteDataPayload } from '../core/shared/operators';
 import { PaginationComponentOptions } from '../shared/pagination/pagination-component-options.model';
 import { AuthService } from '../core/auth/auth.service';
 import { NotificationsService } from '../shared/notifications/notifications.service';
@@ -20,11 +20,11 @@ import {redirectOn4xx} from '../core/shared/authorized.operators';
 import {
   getWorkspaceItemEditRoute
 } from '../workflowitems-edit-page/workflowitems-edit-page-routing-paths';
-import { Suggestion } from '../core/notifications/models/suggestion.model';
-import { SuggestionTarget } from '../core/notifications/models/suggestion-target.model';
 import { SuggestionBulkResult, SuggestionsService } from '../notifications/suggestions.service';
 import { SuggestionTargetsStateService } from '../notifications/suggestion-targets/suggestion-targets.state.service';
 import { SuggestionApproveAndImport } from '../notifications/suggestion-list-element/suggestion-list-element.component';
+import { Suggestion } from '../core/notifications/suggestions/models/suggestion.model';
+import { SuggestionTarget } from '../core/notifications/suggestions/models/suggestion-target.model';
 
 @Component({
   selector: 'ds-suggestion-page',
@@ -109,8 +109,8 @@ export class SuggestionsPageComponent implements OnInit {
         this.researcherName = suggestionTarget.display;
         this.suggestionSource = suggestionTarget.source;
         this.researcherUuid = this.suggestionService.getTargetUuid(suggestionTarget);
+        this.updatePage();
       }),
-      switchMap(() => this.updatePage()),
     ).subscribe();
 
 
@@ -121,7 +121,7 @@ export class SuggestionsPageComponent implements OnInit {
    * Called when one of the pagination settings is changed
    */
   onPaginationChange() {
-    this.updatePage().subscribe();
+    this.updatePage();
   }
 
   /**
@@ -130,7 +130,7 @@ export class SuggestionsPageComponent implements OnInit {
   /**
    * Update the list of suggestions
    */
-  updatePage(): Observable<RemoteData<PaginatedList<Suggestion>>> {
+  updatePage() {
     this.processing$.next(true);
     const pageConfig$: Observable<FindListOptions> = this.paginationService.getFindListOptions(
       this.paginationOptions.id,
@@ -138,8 +138,7 @@ export class SuggestionsPageComponent implements OnInit {
     ).pipe(
       distinctUntilChanged(),
     );
-
-    return combineLatest([this.targetId$, pageConfig$]).pipe(
+    combineLatest([this.targetId$, pageConfig$]).pipe(
       switchMap(([targetId, config]: [string, FindListOptions]) => {
         return this.suggestionService.getSuggestions(
           targetId,
@@ -148,18 +147,12 @@ export class SuggestionsPageComponent implements OnInit {
           config.sort,
         );
       }),
-      getFirstCompletedRemoteData(),
-      tap((resultsRD: RemoteData<PaginatedList<Suggestion>>) => {
-        this.processing$.next(false);
-        if (resultsRD.hasSucceeded) {
-          this.suggestionsRD$.next(resultsRD.payload);
-        } else {
-          this.suggestionsRD$.next(null);
-        }
-
-        this.suggestionService.clearSuggestionRequests();
-      }),
-    );
+      take(1),
+    ).subscribe((results: PaginatedList<Suggestion>) => {
+      this.processing$.next(false);
+      this.suggestionsRD$.next(results);
+      this.suggestionService.clearSuggestionRequests();
+    });
   }
 
   /**

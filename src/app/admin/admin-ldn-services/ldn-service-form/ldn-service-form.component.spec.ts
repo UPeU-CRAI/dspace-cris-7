@@ -114,7 +114,8 @@ describe('LdnServiceFormEditComponent', () => {
     activatedRoute = new MockActivatedRoute(routeParams, routeUrlSegments);
 
     await TestBed.configureTestingModule({
-      imports: [ReactiveFormsModule, TranslateModule.forRoot(), NgbDropdownModule, LdnServiceFormComponent],
+      imports: [ReactiveFormsModule, TranslateModule.forRoot(), NgbDropdownModule],
+      declarations: [LdnServiceFormComponent],
       providers: [
         { provide: LdnServicesService, useValue: ldnServicesService },
         { provide: LdnItemfiltersService, useValue: ldnItemfiltersService },

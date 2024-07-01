@@ -9,9 +9,9 @@ import { hasValue } from '../../../shared/empty.util';
 import { PaginationComponentOptions } from '../../../shared/pagination/pagination-component-options.model';
 import { getSuggestionPageRoute } from '../../../suggestions-page/suggestions-page-routing-paths';
 import { PaginationService } from '../../../core/pagination/pagination.service';
-import { SuggestionTarget } from '../../../core/notifications/models/suggestion-target.model';
 import { SuggestionTargetsStateService } from '../suggestion-targets.state.service';
 import { SuggestionsService } from '../../suggestions.service';
+import { SuggestionTarget } from '../../../core/notifications/suggestions/models/suggestion-target.model';
 
 /**
  * Component to display the Suggestion Target list.
@@ -73,7 +73,7 @@ export class PublicationClaimComponent implements OnInit, AfterViewInit {
     this.totalElements$ = this.suggestionTargetsStateService.getSuggestionTargetsTotals(this.source);
 
     this.subs.push(
-      this.suggestionTargetsStateService.isSuggestionTargetsLoaded().pipe(
+      this.suggestionTargetsStateService.isSuggestionTargetsLoaded(this.source).pipe(
         take(1)
       ).subscribe(() => {
         this.getSuggestionTargets();

@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { SuggestionTargetsStateService } from '../suggestion-targets/suggestion-targets.state.service';
 import { SuggestionsService } from '../suggestions.service';
 import { Observable } from 'rxjs';
-import { SuggestionTarget } from '../../core/notifications/models/suggestion-target.model';
+import { SuggestionTarget } from '../../core/notifications/suggestions/models/suggestion-target.model';
 
 /**
  * Show suggestions notification, used on myDSpace and Profile pages

@@ -8,7 +8,7 @@ import { trigger } from '@angular/animations';
 
 
 import { fromTopEnter } from '../../shared/animations/fromTop';
-import { SuggestionTarget } from '../../core/notifications/models/suggestion-target.model';
+import { SuggestionTarget } from '../../core/notifications/suggestions/models/suggestion-target.model';
 
 /**
  * Show suggestions on a popover window, used on the homepage

@@ -3,7 +3,7 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import {
   ComponentFixture,
   fakeAsync,
-  TestBed,
+  TestBed, tick,
   waitForAsync,
 } from '@angular/core/testing';
 import { BrowserModule } from '@angular/platform-browser';
@@ -75,6 +75,8 @@ describe('SuggestionPageComponent', () => {
         BrowserModule,
         CommonModule,
         TranslateModule.forRoot(),
+      ],
+      declarations: [
         SuggestionEvidencesComponent,
         SuggestionListElementComponent,
         SuggestionsPageComponent,
@@ -131,7 +133,7 @@ describe('SuggestionPageComponent', () => {
     spyOn(component.suggestionsRD$, 'next');
 
     component.targetId$ = observableOf('testid');
-    scheduler.schedule(() => component.updatePage().subscribe());
+    scheduler.schedule(() => component.updatePage());
     scheduler.flush();
 
     expect(component.processing$.next).toHaveBeenCalledTimes(2);
@@ -146,7 +148,7 @@ describe('SuggestionPageComponent', () => {
 
     scheduler.schedule(() => component.ignoreSuggestion('1'));
     scheduler.flush();
-
+    tick(200);
     expect(mockSuggestionsService.ignoreSuggestion).toHaveBeenCalledWith('1');
     expect(mockSuggestionsTargetStateService.dispatchRefreshUserSuggestionsAction).toHaveBeenCalled();
     expect(component.updatePage).toHaveBeenCalled();

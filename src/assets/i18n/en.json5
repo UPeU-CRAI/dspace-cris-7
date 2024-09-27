@@ -1896,6 +1896,8 @@
 
   "file-download-link.restricted": "Restricted bitstream",
 
+  "file-download-link.download": "Download bitstream",
+
   "file-section.error.header": "Error obtaining files for this item",
 
   "footer.copyright": "copyright © 2002-{{ year }}",
@@ -2033,6 +2035,12 @@
   "form.number-picker.decrement": "Decrement {{field}}",
 
   "form.number-picker.increment": "Increment {{field}}",
+
+  "form.number-picker.label.year": "Year",
+
+  "form.number-picker.label.month": "Month",
+
+  "form.number-picker.label.day": "Day",
 
   "form.repeatable.sort.tip": "Drop the item in the new position",
 
@@ -5635,8 +5643,6 @@
   "workflow.search.results.head": "Workflow tasks",
 
   "supervision.search.results.head": "Workflow and Workspace tasks",
-
-  "orgunit.search.results.head": "Organizational Unit Search Results",
 
   "workflow-item.edit.breadcrumbs": "Edit workflowitem",
 

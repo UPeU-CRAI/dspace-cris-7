@@ -13,7 +13,7 @@ import {
   ComponentFactoryResolver,
   ContentChildren,
   DoCheck,
-  EventEmitter,
+  EventEmitter, inject,
   Inject,
   Input,
   OnChanges,
@@ -27,6 +27,7 @@ import {
   ViewContainerRef,
 } from '@angular/core';
 import {
+  AbstractControl,
   FormsModule,
   ReactiveFormsModule,
   UntypedFormArray,
@@ -124,6 +125,7 @@ import {
 import { ExistingRelationListElementComponent } from './existing-relation-list-element/existing-relation-list-element.component';
 import { DYNAMIC_FORM_CONTROL_TYPE_CUSTOM_SWITCH } from './models/custom-switch/custom-switch.model';
 import { DsDynamicLookupRelationModalComponent } from './relation-lookup-modal/dynamic-lookup-relation-modal.component';
+import {LiveRegionService} from "../../../live-region/live-region.service";
 
 @Component({
   selector: 'ds-dynamic-form-control-container',
@@ -194,6 +196,8 @@ export class DsDynamicFormControlContainerComponent extends DynamicFormControlCo
   get componentType(): Type<DynamicFormControl> | null {
     return this.dynamicFormControlFn(this.model);
   }
+
+  private readonly liveRegionService = inject(LiveRegionService);
 
   constructor(
     protected componentFactoryResolver: ComponentFactoryResolver,
@@ -350,6 +354,31 @@ export class DsDynamicFormControlContainerComponent extends DynamicFormControlCo
     if (this.showErrorMessages) {
       this.destroyFormControlComponent();
       this.createFormControlComponent();
+      this.announceErrorMessages();
+    }
+  }
+
+  /**
+   * Announce error messages to the user
+   */
+  announceErrorMessages() {
+    const numberOfInvalidInputs = this.getNumberOfInvalidInputs() ?? 1;
+    setTimeout(() => {
+      this.errorMessages.forEach((errorMsg) => {
+        // set timer based on the number of the invalid inputs
+        this.liveRegionService.setMessageTimeOutMs(numberOfInvalidInputs*3500);
+        const message = this.translateService.instant(errorMsg);
+        this.liveRegionService.addMessage(message);
+      });
+    }, 14000);// wait for the general deposit alert to be announced
+  }
+
+  /**
+   * Get the number of invalid inputs in the formGroup
+   */
+  private getNumberOfInvalidInputs(): number {
+    if (this.formGroup && this.formGroup.controls) {
+      return Object.values(this.formGroup.controls).filter((control: AbstractControl) => control.invalid).length;
     }
   }
 

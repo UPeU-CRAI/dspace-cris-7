@@ -13,8 +13,9 @@ import {
   ComponentFactoryResolver,
   ContentChildren,
   DoCheck,
-  EventEmitter, inject,
+  EventEmitter,
   Inject,
+  inject,
   Input,
   OnChanges,
   OnDestroy,
@@ -108,6 +109,7 @@ import {
   isNotEmpty,
   isNotUndefined,
 } from '../../../empty.util';
+import { LiveRegionService } from '../../../live-region/live-region.service';
 import { ItemSearchResult } from '../../../object-collection/shared/item-search-result.model';
 import { SelectableListState } from '../../../object-list/selectable-list/selectable-list.reducer';
 import { SelectableListService } from '../../../object-list/selectable-list/selectable-list.service';
@@ -125,7 +127,6 @@ import {
 import { ExistingRelationListElementComponent } from './existing-relation-list-element/existing-relation-list-element.component';
 import { DYNAMIC_FORM_CONTROL_TYPE_CUSTOM_SWITCH } from './models/custom-switch/custom-switch.model';
 import { DsDynamicLookupRelationModalComponent } from './relation-lookup-modal/dynamic-lookup-relation-modal.component';
-import { LiveRegionService } from '../../../live-region/live-region.service';
 
 @Component({
   selector: 'ds-dynamic-form-control-container',

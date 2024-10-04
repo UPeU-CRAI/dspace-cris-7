@@ -125,7 +125,7 @@ export class UploaderComponent implements OnInit, AfterViewInit {
     private dragService: DragService,
     private tokenExtractor: HttpXsrfTokenExtractor,
     private cookieService: CookieService,
-    private liveRegionService: LiveRegionService
+    private liveRegionService: LiveRegionService,
   ) {
   }
 
@@ -212,7 +212,7 @@ export class UploaderComponent implements OnInit, AfterViewInit {
     this.liveRegionService.clear();
     this.uploader.onProgressItem = (fileItem: FileItem, progress: any) => {
       this.announceProgress(progress);
-      this.onProgress()
+      this.onProgress();
     };
   }
 

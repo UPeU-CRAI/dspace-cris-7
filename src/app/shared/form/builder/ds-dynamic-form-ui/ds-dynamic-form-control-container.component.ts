@@ -125,7 +125,7 @@ import {
 import { ExistingRelationListElementComponent } from './existing-relation-list-element/existing-relation-list-element.component';
 import { DYNAMIC_FORM_CONTROL_TYPE_CUSTOM_SWITCH } from './models/custom-switch/custom-switch.model';
 import { DsDynamicLookupRelationModalComponent } from './relation-lookup-modal/dynamic-lookup-relation-modal.component';
-import {LiveRegionService} from "../../../live-region/live-region.service";
+import { LiveRegionService } from '../../../live-region/live-region.service';
 
 @Component({
   selector: 'ds-dynamic-form-control-container',
@@ -366,7 +366,7 @@ export class DsDynamicFormControlContainerComponent extends DynamicFormControlCo
     setTimeout(() => {
       this.errorMessages.forEach((errorMsg) => {
         // set timer based on the number of the invalid inputs
-        this.liveRegionService.setMessageTimeOutMs(numberOfInvalidInputs*3500);
+        this.liveRegionService.setMessageTimeOutMs(numberOfInvalidInputs * 3500);
         const message = this.translateService.instant(errorMsg);
         this.liveRegionService.addMessage(message);
       });
